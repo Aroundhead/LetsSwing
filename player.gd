@@ -1,6 +1,6 @@
 extends CharacterBody2D
 
-@export var speed := 200
+@export var speed := 300
 @export var whip_distance := 300
 @export var whip_strength := 10
 
@@ -28,13 +28,10 @@ func handle_movement(delta):
 
 	if not is_swinging:
 		velocity.y += 400 * delta  # Normal gravity
-	# No gravity while swinging
 
-	# Optional: clamp vertical speed
+	# Clamp vertical speed
 	if velocity.y > 600:
 		velocity.y = 600
-
-	move_and_slide()
 
 	move_and_slide()
 
@@ -46,34 +43,50 @@ func try_fire_whip():
 
 	if whip_ray.is_colliding():
 		var hit = whip_ray.get_collision_point()
+		if global_position.distance_to(hit) <= whip_distance:
+			anchor_position = hit
+			is_swinging = true
 
-		# Set anchor and enable swing
-		anchor_position = hit
-		is_swinging = true
-
-		# Stop falling when we catch a target
-		if velocity.y > 0:
-			velocity.y = 0
+			# Stop falling on connect
+			if velocity.y > 0:
+				velocity.y = 0
 
 func apply_swing_force():
 	var to_anchor = anchor_position - global_position
-	var rope_dir = to_anchor.normalized()
+	var rope_length = to_anchor.length()
+	var rope_dir = to_anchor / rope_length
 
-	# Tangential (swing) force only if anchor is above player
-	if anchor_position.y < global_position.y:
-		var swing_direction = Vector2(-rope_dir.y, rope_dir.x)
+	# 🔺 Movimiento hacia/desde el ancla
+	if Input.is_action_pressed("ui_up"):
+		# Reposicionar al jugador hacia el ancla (pero no instantáneo)
+		global_position += rope_dir * 100 * get_physics_process_delta_time()
+	elif Input.is_action_pressed("ui_down") and rope_length < whip_distance:
+		# Moverse ligeramente alejándose del ancla (sin pasarse)
+		global_position -= rope_dir * 100 * get_physics_process_delta_time()
 
-		# Flip direction if dot product is negative (wrong side)
-		if velocity.dot(swing_direction) < 0:
-			swing_direction = -swing_direction
+	# Recalcular después del movimiento
+	to_anchor = anchor_position - global_position
+	rope_length = to_anchor.length()
+	rope_dir = to_anchor / rope_length
 
-		velocity += swing_direction * whip_strength
+	# Enforce max rope length
+	if rope_length > whip_distance:
+		global_position = anchor_position - rope_dir * whip_distance
 
-	# Always pull slightly toward anchor (acts as rope tension)
-	var pull_force = rope_dir * 50
-	velocity += pull_force * get_physics_process_delta_time()
+	# Descomponer velocidad: eliminar componente radial
+	var radial_velocity = rope_dir * velocity.dot(rope_dir)
+	var tangential_velocity = velocity - radial_velocity
 
-	# Update visual rope
+	# Aplicar gravedad manual
+	velocity.y += 400 * get_physics_process_delta_time()
+
+	# Mantener solo la parte tangencial
+	velocity = tangential_velocity
+
+	# Tensión hacia el ancla
+	velocity += rope_dir * 50 * get_physics_process_delta_time()
+
+	# Visual del látigo
 	whip_line.global_position = global_position
 	whip_line.clear_points()
 	whip_line.add_point(Vector2.ZERO)

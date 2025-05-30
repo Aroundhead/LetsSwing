@@ -32,7 +32,7 @@ texture_mode = 1
 joint_mode = 1
 
 [node name="whipRay" type="RayCast2D" parent="."]
-position = Vector2(1, -24)
+position = Vector2(0, -35)
 target_position = Vector2(0, -27)
 
 [node name="AnimatedSprite2D" type="AnimatedSprite2D" parent="."]
