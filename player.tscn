@@ -1,8 +1,28 @@
-[gd_scene load_steps=7 format=3 uid="uid://b1raic6e3yb7f"]
+[gd_scene load_steps=8 format=3 uid="uid://b1raic6e3yb7f"]
 
 [ext_resource type="Texture2D" uid="uid://dlggbn83qsspx" path="res://src/img/whip.png" id="1_4flbx"]
 [ext_resource type="Script" uid="uid://bbcdoigicd2ey" path="res://player.gd" id="1_onrkg"]
 [ext_resource type="Texture2D" uid="uid://c5amfi73ryssv" path="res://src/img/player.png" id="3_i3pqv"]
+
+[sub_resource type="SceneReplicationConfig" id="SceneReplicationConfig_i3pqv"]
+properties/0/path = NodePath(".:synced_position")
+properties/0/spawn = true
+properties/0/replication_mode = 1
+properties/1/path = NodePath(".:synced_velocity")
+properties/1/spawn = true
+properties/1/replication_mode = 1
+properties/2/path = NodePath(".:whip_distance")
+properties/2/spawn = true
+properties/2/replication_mode = 1
+properties/3/path = NodePath(".:speed")
+properties/3/spawn = true
+properties/3/replication_mode = 1
+properties/4/path = NodePath(".:whip_strength")
+properties/4/spawn = true
+properties/4/replication_mode = 1
+properties/5/path = NodePath(".:whip_travel_time")
+properties/5/spawn = true
+properties/5/replication_mode = 1
 
 [sub_resource type="AtlasTexture" id="AtlasTexture_i3pqv"]
 atlas = ExtResource("1_4flbx")
@@ -22,6 +42,10 @@ animations = [{
 
 [node name="player" type="CharacterBody2D"]
 script = ExtResource("1_onrkg")
+
+[node name="MultiplayerSynchronizer" type="MultiplayerSynchronizer" parent="."]
+process_mode = 3
+replication_config = SubResource("SceneReplicationConfig_i3pqv")
 
 [node name="whipLine" type="Line2D" parent="."]
 texture_repeat = 2
